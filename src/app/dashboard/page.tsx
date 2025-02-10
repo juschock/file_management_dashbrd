@@ -1,4 +1,3 @@
-// file-management-poc/src/app/dashboard/page.tsx
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
@@ -25,44 +24,22 @@ import {
   Paper,
   IconButton,
   InputAdornment,
+  Grid,
 } from '@mui/material';
 import { Delete, Visibility } from '@mui/icons-material';
-import { useTheme, createTheme, ThemeProvider } from '@mui/material/styles';
-import { UploadFile, Description, Category, Label } from '@mui/icons-material';
-
-// Define a custom theme with a blue and silver gradient background
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#0d47a1', // A deep blue for primary actions
-    },
-    secondary: {
-      main: '#ffab00', // A vibrant yellow for secondary actions
-    },
-    background: {
-      default: 'linear-gradient(135deg, #0d47a1 0%, #b0c4de 50%, #c0c0c0 100%)', // Blue to silver gradient
-      paper: '#ffffff', // White for paper elements
-    },
-    text: {
-      primary: '#212121', // Dark grey for primary text
-      secondary: '#757575', // Medium grey for secondary text
-    },
-    action: {
-      hover: '#e0e0e0', // Light grey for hover effects
-    },
-  },
-  typography: {
-    fontFamily: 'Roboto, sans-serif', // A clean, modern font
-  },
-});
+import {
+  UploadFile, Description, Category, Label
+} from '@mui/icons-material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const { register, handleSubmit, reset } = useForm();
+
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [filesList, setFilesList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const router = useRouter();
   const [processedFiles, setProcessedFiles] = useState<any[]>([]);
 
   useEffect(() => {
@@ -72,9 +49,7 @@ export default function Dashboard() {
   const fetchFiles = async () => {
     try {
       const res = await fetch('/api/files');
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       setFilesList(data);
     } catch (error) {
@@ -94,9 +69,7 @@ export default function Dashboard() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const result = await res.json();
       setUploadResult(result);
       reset();
@@ -112,9 +85,7 @@ export default function Dashboard() {
       const res = await fetch(`/api/files/${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       alert(data.message);
       fetchFiles();
@@ -123,81 +94,168 @@ export default function Dashboard() {
     }
   };
 
-  const filteredFiles = filesList.filter(file =>
+  const filteredFiles = filesList.filter((file) =>
     file.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
     file.originalName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (status === "loading")
-    return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Container>
-    );
+  const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: '#1E3A8A',
+      },
+      background: {
+        default: '#6CA6CD',
+        paper: '#000000',
+      },
+      text: {
+        primary: '#ffffff',
+        secondary: '#ffffff',
+      },
+    },
+    typography: {
+      fontFamily: 'Roboto, sans-serif',
+      fontSize: 18,
+      h5: {
+        fontSize: '2rem',
+      },
+      h6: {
+        fontSize: '1.75rem',
+      },
+      body1: {
+        fontSize: '1.25rem',
+      },
+      body2: {
+        fontSize: '1.125rem',
+      },
+    },
+    components: {
+      MuiTypography: {
+        styleOverrides: {
+          root: {
+            color: '#ffffff',
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            margin: '16px',
+          },
+        },
+      },
+    },
+  });
 
-  if (!session)
+  if (status === "loading") {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Alert severity="warning">Please sign in to access the dashboard.</Alert>
-      </Container>
+      <ThemeProvider theme={darkTheme}>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="100vh"
+        >
+          <CircularProgress />
+        </Box>
+      </ThemeProvider>
     );
+  }
+
+  if (!session) {
+    return (
+      <ThemeProvider theme={darkTheme}>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="100vh"
+        >
+          <Alert severity="warning">Please sign in to access the dashboard.</Alert>
+        </Box>
+      </ThemeProvider>
+    );
+  }
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container sx={{ py: 4, backgroundColor: theme.palette.background.default, minHeight: '100vh', display: 'flex' }}>
-        <Box sx={{ width: '25%', pr: 2 }}>
-          <Card sx={{ mb: 4, boxShadow: 3 }}>
-            <CardContent>
-              <Typography variant="h5" component="h2" gutterBottom>
-                Processed Files
-              </Typography>
-              <TextField
-                select
-                fullWidth
-                SelectProps={{
-                  native: true,
-                }}
-                variant="outlined"
-                helperText="Select a file to view metadata"
-              >
-                <option value="">Select a file</option>
-                {processedFiles.map((file) => (
-                  <option key={file.id} value={file.id}>
-                    {file.filename}
-                  </option>
-                ))}
-              </TextField>
-              <Box sx={{ mt: 2 }}>
-                {processedFiles.map((file) => (
-                  <Box key={file.id} sx={{ mb: 2 }}>
-                    <Typography variant="body1"><strong>Filename:</strong> {file.filename}</Typography>
-                    <Typography variant="body2"><strong>Document Type:</strong> {file.documentType || "-"}</Typography>
-                    <Typography variant="body2"><strong>Category:</strong> {file.category || "-"}</Typography>
-                    <Typography variant="body2"><strong>Tags:</strong> {file.tags || "-"}</Typography>
-                    <Typography variant="body2"><strong>Processed At:</strong> {new Date(file.processedAt).toLocaleString()}</Typography>
-                  </Box>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-
-        <Box sx={{ width: '75%' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" component="h1">
-              Dashboard
-            </Typography>
-            <Button variant="contained" color="error" onClick={() => signOut({ callbackUrl: '/' })}>
+    <ThemeProvider theme={darkTheme}>
+      <Box
+        display="flex"
+        flexDirection={{ xs: 'column', md: 'row' }}
+        minHeight="100vh"
+        bgcolor="background.default"
+      >
+        <Box
+          width={{ xs: '100%', md: '240px' }}
+          bgcolor="background.paper"
+          p={2}
+          sx={{ boxShadow: 4 }}
+          display="flex"
+          flexDirection="column"
+          justifyContent="space-between"
+        >
+          <Box>
+            <Button
+              variant="contained"
+              onClick={() => signOut({ callbackUrl: '/' })}
+              sx={{ 
+                mb: 2,
+                backgroundColor: '#FF6347',
+                color: '#ffffff',
+                '&:hover': {
+                  backgroundColor: '#FF4500',
+                },
+              }}
+            >
               Sign Out
             </Button>
+            <Typography variant="h6" gutterBottom>
+              Dashboard
+            </Typography>
           </Box>
+        </Box>
 
-          <Card sx={{ mb: 4, boxShadow: 3 }}>
+        <Box flexGrow={1} p={{ xs: 2, md: 3 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6">Daily Request Health %</Typography>
+                  <Typography variant="body2">0</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6">Daily Requests</Typography>
+                  <Typography variant="body2">0</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6">Daily Credit Usage</Typography>
+                  <Typography variant="body2">0</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          <Card sx={{ mb: 4 }}>
             <CardContent>
-              <Typography variant="h5" component="h2" gutterBottom>
+              <Typography variant="h5" gutterBottom>
                 Upload a File
               </Typography>
-              <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 2 }}>
+              <Box
+                component="form"
+                onSubmit={handleSubmit(onSubmit)}
+                noValidate
+                sx={{ mt: 2 }}
+              >
                 <Stack spacing={2}>
                   <TextField
                     type="file"
@@ -249,7 +307,7 @@ export default function Dashboard() {
                       ),
                     }}
                   />
-                  <Button type="submit" variant="contained" color="primary">
+                  <Button type="submit" variant="contained" color="success">
                     Upload File
                   </Button>
                 </Stack>
@@ -258,21 +316,30 @@ export default function Dashboard() {
           </Card>
 
           {uploadResult && (
-            <Card sx={{ mb: 4, boxShadow: 3 }}>
+            <Card sx={{ mb: 4 }}>
               <CardContent>
-                <Typography variant="h5" component="h2" gutterBottom>
+                <Typography variant="h5" gutterBottom>
                   Upload Result
                 </Typography>
-                <Box component="pre" sx={{ backgroundColor: '#f5f5f5', p: 2, borderRadius: 1, overflow: 'auto' }}>
+                <Box
+                  component="pre"
+                  sx={{
+                    backgroundColor: '#333',
+                    color: '#ccc',
+                    p: 2,
+                    borderRadius: 1,
+                    overflow: 'auto',
+                  }}
+                >
                   {JSON.stringify(uploadResult, null, 2)}
                 </Box>
               </CardContent>
             </Card>
           )}
 
-          <Card sx={{ boxShadow: 3 }}>
+          <Card>
             <CardContent>
-              <Typography variant="h5" component="h2" gutterBottom>
+              <Typography variant="h5" gutterBottom>
                 Uploaded Files
               </Typography>
               <TextField
@@ -296,14 +363,18 @@ export default function Dashboard() {
                   </TableHead>
                   <TableBody>
                     {filteredFiles.map((file) => (
-                      <TableRow key={file.id} hover sx={{ '&:nth-of-type(odd)': { backgroundColor: theme.palette.action.hover } }}>
+                      <TableRow key={file.id} hover>
                         <TableCell>{file.filename}</TableCell>
                         <TableCell>{file.originalName}</TableCell>
                         <TableCell>{file.documentType || "-"}</TableCell>
                         <TableCell>{file.category || "-"}</TableCell>
-                        <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell>
+                        <TableCell>
+                          {new Date(file.createdAt).toLocaleString()}
+                        </TableCell>
                         <TableCell align="center">
-                          <IconButton onClick={() => alert(JSON.stringify(file, null, 2))}>
+                          <IconButton
+                            onClick={() => alert(JSON.stringify(file, null, 2))}
+                          >
                             <Visibility />
                           </IconButton>
                           <IconButton onClick={() => handleDelete(file.id)}>
@@ -325,7 +396,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </Box>
-      </Container>
+      </Box>
     </ThemeProvider>
   );
 }

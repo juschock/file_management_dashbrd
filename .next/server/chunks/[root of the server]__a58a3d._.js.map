@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 63, "column": 0}, "map": {"version":3,"sources":["file:///Users/joshuauschock/Desktop/dev/githubPortfolio/next_prac/file_management_dashboard/src/app/api/files/route.js"],"sourcesContent":["import { NextResponse } from 'next/server';\nimport { PrismaClient } from '@prisma/client';\n\nexport async function GET(request) {\n  const prisma = new PrismaClient();\n  try {\n    const files = await prisma.uploadedFile.findMany({\n      orderBy: { createdAt: 'desc' }\n    });\n    return NextResponse.json(files);\n  } catch (error) {\n    return NextResponse.json({ error: error.message }, { status: 500 });\n  } finally {\n    await prisma.$disconnect();\n  }\n}\n"],"names":[],"mappings":";;;AAAA;AACA;;;AAEO,eAAe,IAAI,OAAO;IAC/B,MAAM,SAAS,IAAI,6HAAA,CAAA,eAAY;IAC/B,IAAI;QACF,MAAM,QAAQ,MAAM,OAAO,YAAY,CAAC,QAAQ,CAAC;YAC/C,SAAS;gBAAE,WAAW;YAAO;QAC/B;QACA,OAAO,gIAAA,CAAA,eAAY,CAAC,IAAI,CAAC;IAC3B,EAAE,OAAO,OAAO;QACd,OAAO,gIAAA,CAAA,eAAY,CAAC,IAAI,CAAC;YAAE,OAAO,MAAM,OAAO;QAAC,GAAG;YAAE,QAAQ;QAAI;IACnE,SAAU;QACR,MAAM,OAAO,WAAW;IAC1B;AACF"}},
+    {"offset": {"line": 89, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
+}
